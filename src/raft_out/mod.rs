@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     raft_out::{
         draw::RaftOutDrawPlugin, island::RaftOutIslandPlugin, player::RaftOutPlayerPlugin,
-        trees::RaftOutTreesPlugin,
+        trees::RaftOutTreesPlugin, waves::RaftOutWavesPlugin,
     },
     text_renderer::draw::BackgroundCharacter,
 };
@@ -13,6 +13,7 @@ mod draw;
 mod island;
 mod player;
 mod trees;
+mod waves;
 
 pub struct RaftOutPlugin;
 
@@ -23,6 +24,7 @@ impl Plugin for RaftOutPlugin {
             RaftOutIslandPlugin,
             RaftOutPlayerPlugin,
             RaftOutTreesPlugin,
+            RaftOutWavesPlugin,
         ))
         .insert_resource(BackgroundCharacter {
             character: '~',

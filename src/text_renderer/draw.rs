@@ -9,6 +9,9 @@ use ratatui::{Frame, layout::Rect, style::Stylize, widgets::Block};
 pub struct Flags {
     pub debug: bool,
 }
+
+#[derive(Resource, Debug)]
+pub struct TextRendererSize(pub UVec2);
 pub struct TextRendererDrawPlugin;
 
 impl Plugin for TextRendererDrawPlugin {
@@ -33,6 +36,7 @@ pub struct BackgroundCharacter {
 }
 
 fn draw(
+    mut commands: Commands,
     maybe_background: Option<Res<BackgroundCharacter>>,
     mut ratatui: ResMut<RatatuiContext>,
     flags: Res<Flags>,
@@ -66,6 +70,10 @@ fn draw(
                 cell.fg = draw.color;
             }
         }
+        commands.insert_resource(TextRendererSize(UVec2::new(
+            area.width as u32,
+            area.height as u32,
+        )));
     });
 }
 
