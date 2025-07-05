@@ -6,7 +6,7 @@ pub struct RaftOutIslandPlugin;
 
 impl bevy::prelude::Plugin for RaftOutIslandPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, create_island);
+        app.add_systems(PreStartup, create_island);
     }
 }
 
@@ -14,9 +14,7 @@ impl bevy::prelude::Plugin for RaftOutIslandPlugin {
 pub struct IslandCell;
 
 fn create_island(mut commands: Commands) {
-    let sizes = [
-        15, 18, 21, 23, 23, 24, 27, 28, 28, 28, 27, 24, 21, 18, 17, 15, 12,
-    ];
+    let sizes = [17, 23, 24, 27, 28, 28, 28, 27, 24, 17];
 
     for (y, size) in sizes.iter().enumerate() {
         for x in 0..*size {

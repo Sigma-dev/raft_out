@@ -9,7 +9,8 @@ pub struct RaftOutPlayerPlugin;
 
 impl Plugin for RaftOutPlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Startup, spawn_player)
+        app.add_event::<PlayerInteract>()
+            .add_systems(Startup, spawn_player)
             .add_systems(Update, move_player);
     }
 }
@@ -19,15 +20,21 @@ pub struct Player {
     last_move: f32,
 }
 
+#[derive(Event)]
+pub struct PlayerInteract {
+    dir: IVec2,
+}
+
 fn spawn_player(mut commands: Commands) {
     commands.spawn((Cell::new(IVec2::ZERO), Player { last_move: 0. }));
 }
 
 fn move_player(
     time: Res<Time>,
+    mut commands: Commands,
     mut pressed_r: EventReader<TextRendererPressed>,
     mut player_q: Query<(&mut Cell, &mut Player)>,
-    cells: Query<(&Cell, Option<&WalkableCell>, Option<&SolidCell>), Without<Player>>,
+    cells: Query<(Entity, &Cell, Option<&WalkableCell>, Option<&SolidCell>), Without<Player>>,
 ) {
     let (mut player_cell, mut player) = player_q.single_mut().unwrap();
     if time.elapsed_secs() < player.last_move + 0.2 {
@@ -55,17 +62,20 @@ fn move_player(
         let destination = player_cell.pos + requested_move;
         if !cells
             .iter()
-            .any(|(c, w, _)| c.pos == destination && w.is_some())
+            .any(|(_, c, w, _)| c.pos == destination && w.is_some())
         {
             return;
         }
-        if cells
+        player.last_move = time.elapsed_secs();
+        if let Some((e, _, _, _)) = cells
             .iter()
-            .any(|(c, _, s)| c.pos == destination && s.is_some())
+            .find(|(_, c, _, s)| c.pos == destination && s.is_some())
         {
+            commands.entity(e).trigger(PlayerInteract {
+                dir: -requested_move,
+            });
             return;
         }
         player_cell.pos = destination;
-        player.last_move = time.elapsed_secs()
     }
 }

@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    raft_out::{cell::Cell, island::IslandCell, player::Player},
+    raft_out::{cell::Cell, island::IslandCell, player::Player, trees::Tree},
     text_renderer::draw::DrawCharacter,
 };
 
@@ -9,7 +9,10 @@ pub struct RaftOutDrawPlugin;
 
 impl bevy::prelude::Plugin for RaftOutDrawPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(bevy::prelude::Update, (draw_island, draw_player).chain());
+        app.add_systems(
+            bevy::prelude::Update,
+            (draw_island, draw_trees, draw_player).chain(),
+        );
     }
 }
 
@@ -22,6 +25,16 @@ fn draw_island(
             pos: cell.pos,
             character: '#',
             color: ratatui::style::Color::Yellow,
+        });
+    }
+}
+
+fn draw_trees(mut draw_w: EventWriter<DrawCharacter>, player: Query<&Cell, With<Tree>>) {
+    for cell in player.iter() {
+        draw_w.write(DrawCharacter {
+            pos: cell.pos,
+            character: 'T',
+            color: ratatui::style::Color::Rgb(90, 55, 40),
         });
     }
 }
