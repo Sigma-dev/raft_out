@@ -1,7 +1,9 @@
 use bevy::prelude::*;
 
 use crate::{
-    raft_out::{cell::Cell, island::IslandCell, player::Player, trees::Tree, waves::Wave},
+    raft_out::{
+        cell::Cell, island::IslandCell, player::Player, raft::Raft, trees::Tree, waves::Wave,
+    },
     text_renderer::draw::DrawCharacter,
 };
 
@@ -11,7 +13,7 @@ impl bevy::prelude::Plugin for RaftOutDrawPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_systems(
             bevy::prelude::Update,
-            (draw_waves, draw_island, draw_trees, draw_player).chain(),
+            (draw_waves, draw_island, draw_trees, draw_player, draw_raft).chain(),
         );
     }
 }
@@ -54,7 +56,17 @@ fn draw_player(mut draw_w: EventWriter<DrawCharacter>, player: Query<&Cell, With
         draw_w.write(DrawCharacter {
             pos: cell.pos,
             character: 'P',
-            color: ratatui::style::Color::Green,
+            color: ratatui::style::Color::White,
+        });
+    }
+}
+
+fn draw_raft(mut draw_w: EventWriter<DrawCharacter>, raft: Query<&Cell, With<Raft>>) {
+    for cell in raft.iter() {
+        draw_w.write(DrawCharacter {
+            pos: cell.pos,
+            character: 'w',
+            color: ratatui::style::Color::Rgb(90, 55, 40),
         });
     }
 }
