@@ -6,6 +6,7 @@ use crate::{
     raft_out::{
         cell::{Cell, SolidCell},
         island::{IslandCell, IslandCreated},
+        level::CurrentLevel,
         player::{CarryingWood, Player, PlayerInteract},
     },
 };
@@ -23,15 +24,17 @@ pub struct Tree;
 
 fn spawn_trees(
     mut level_manager: LevelManager,
+    current_level: Res<CurrentLevel>,
     mut island_created_r: EventReader<IslandCreated>,
     island_q: Query<&Cell, With<IslandCell>>,
 ) {
+    let tree_amount = current_level.0 + 2;
     for _ in island_created_r.read() {
         let positions = island_q
             .iter()
             .map(|c| c.pos)
             .filter(|p| *p != IVec2::ZERO)
-            .choose_multiple(&mut thread_rng(), 3);
+            .choose_multiple(&mut thread_rng(), tree_amount as usize);
 
         for pos in positions {
             level_manager

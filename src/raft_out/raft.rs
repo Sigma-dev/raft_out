@@ -6,7 +6,7 @@ use crate::{
     raft_out::{
         cell::Cell,
         island::IslandCell,
-        level::ExitLevel,
+        level::{CurrentLevel, ExitLevel},
         player::{CarryingWood, Player, PlayerInteractNoGround, spawn_player},
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
@@ -63,6 +63,7 @@ fn draw_preview(
 fn handle_placing(
     mut commands: Commands,
     mut level_manager: LevelManager,
+    current_level: Res<CurrentLevel>,
     mut rafts: Query<(Entity, &Cell, &mut RaftConstruction)>,
     cells: Query<&Cell>,
     mut interactions_r: EventReader<PlayerInteractNoGround>,
@@ -90,7 +91,7 @@ fn handle_placing(
                     facing: interaction.dir.flipped(),
                 },
                 RaftConstruction {
-                    required: 2,
+                    required: current_level.0 + 2,
                     progress: 1,
                 },
             ));

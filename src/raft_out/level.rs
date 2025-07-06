@@ -15,24 +15,34 @@ pub struct RaftOutLevelPlugin;
 
 impl bevy::prelude::Plugin for RaftOutLevelPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_event::<ExitLevel>().add_systems(
-            PreUpdate,
-            (
-                handle_level_change.before(handle_level_change2),
-                handle_level_change2,
-            ),
-        );
+        app.insert_resource(CurrentLevel(0))
+            .add_event::<ExitLevel>()
+            .add_systems(
+                PreUpdate,
+                (
+                    handle_level_change.before(handle_level_change2),
+                    handle_level_change2,
+                ),
+            );
     }
 }
+
+#[derive(Resource)]
+pub struct CurrentLevel(pub u32);
 
 #[derive(Event)]
 pub struct ExitLevel {
     pub exit_pos: IVec2,
 }
 
-fn handle_level_change(mut level_manager: LevelManager, mut exits_r: EventReader<ExitLevel>) {
+fn handle_level_change(
+    mut level_manager: LevelManager,
+    mut exits_r: EventReader<ExitLevel>,
+    mut current_level: ResMut<CurrentLevel>,
+) {
     for _ in exits_r.read() {
         level_manager.clear_current();
+        current_level.0 += 1;
     }
 }
 
