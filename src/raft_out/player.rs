@@ -2,8 +2,10 @@ use bevy::prelude::*;
 
 use crate::{
     direction::Direction,
-    level_manager::LevelManager,
-    raft_out::cell::{Cell, SolidCell, WalkableCell},
+    raft_out::{
+        GameState,
+        cell::{Cell, SolidCell, WalkableCell},
+    },
     text_renderer::input::TextRendererPressed,
 };
 
@@ -13,7 +15,6 @@ impl Plugin for RaftOutPlayerPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.add_event::<PlayerInteract>()
             .add_event::<PlayerInteractNoGround>()
-            .add_systems(Startup, start_spawn_player)
             .add_systems(Update, move_player);
     }
 }
@@ -38,18 +39,15 @@ pub struct PlayerInteractNoGround {
     pub pos: IVec2,
 }
 
-pub fn spawn_player(mut level_manager: LevelManager, pos: IVec2) {
-    level_manager.spawn_in_current_level((
+pub fn spawn_player(commands: &mut Commands, pos: IVec2) {
+    commands.spawn((
         Cell::new(pos),
         Player {
             last_move: 0.,
             facing: Direction::Down,
         },
+        StateScoped(GameState::Level),
     ));
-}
-
-fn start_spawn_player(level_manager: LevelManager) {
-    spawn_player(level_manager, IVec2::ZERO);
 }
 
 fn move_player(

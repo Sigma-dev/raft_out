@@ -29,6 +29,19 @@ pub struct DrawCharacter {
     pub color: ratatui::style::Color,
 }
 
+impl DrawCharacter {
+    pub fn as_centered_text(offset: IVec2, text: String) -> Vec<DrawCharacter> {
+        text.chars()
+            .enumerate()
+            .map(|(i, c)| DrawCharacter {
+                pos: IVec2::new(offset.x - ((text.len() / 2) as i32) + i as i32, offset.y),
+                character: c,
+                color: ratatui::style::Color::White,
+            })
+            .collect()
+    }
+}
+
 #[derive(Resource)]
 pub struct BackgroundCharacter {
     pub character: char,

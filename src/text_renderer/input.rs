@@ -10,9 +10,15 @@ pub struct TextRendererPressed {
     pub key: KeyCode,
 }
 
+#[derive(Event)]
+pub struct TextRendererJustPressed {
+    pub key: KeyCode,
+}
+
 impl Plugin for TextRendererInputPlugin {
     fn build(&self, app: &mut App) {
         app.add_event::<TextRendererPressed>()
+            .add_event::<TextRendererJustPressed>()
             .add_systems(Update, handle_input_system);
     }
 }
@@ -21,6 +27,7 @@ impl Plugin for TextRendererInputPlugin {
 pub fn handle_input_system(
     mut crossterm_input: EventReader<KeyEvent>,
     mut pressed_w: EventWriter<TextRendererPressed>,
+    mut just_pressed_w: EventWriter<TextRendererJustPressed>,
 ) {
     use bevy_ratatui::crossterm::event::KeyEventKind;
     for event in crossterm_input.read() {
@@ -44,6 +51,11 @@ pub fn handle_input_system(
                 pressed_w.write(TextRendererPressed { key: KeyCode::KeyA });
             }
         }
+        if event.kind == KeyEventKind::Repeat {
+            if let bevy_ratatui::crossterm::event::KeyCode::Char('w') = event.code {
+                just_pressed_w.write(TextRendererJustPressed { key: KeyCode::KeyW });
+            }
+        }
     }
 }
 
@@ -51,8 +63,13 @@ pub fn handle_input_system(
 pub fn handle_input_system(
     bevy_input: Res<ButtonInput<KeyCode>>,
     mut pressed_w: EventWriter<TextRendererPressed>,
+    mut just_pressed_w: EventWriter<TextRendererJustPressed>,
 ) {
     for &press in bevy_input.get_pressed() {
         pressed_w.write(TextRendererPressed { key: press });
+    }
+
+    for &press in bevy_input.get_just_pressed() {
+        just_pressed_w.write(TextRendererJustPressed { key: press });
     }
 }

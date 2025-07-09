@@ -2,8 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     raft_out::{
-        cell::Cell, island::IslandCell, level::CurrentLevel, player::Player, raft::Raft,
-        trees::Tree, waves::Wave,
+        cell::Cell, crabs::Crab, island::IslandCell, level::CurrentLevel, player::Player,
+        raft::Raft, trees::Tree, waves::Wave,
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
 };
@@ -18,6 +18,7 @@ impl bevy::prelude::Plugin for RaftOutDrawPlugin {
                 draw_waves,
                 draw_island,
                 draw_trees,
+                draw_crabs,
                 draw_player,
                 draw_raft,
                 draw_level,
@@ -35,13 +36,11 @@ fn draw_level(
     let Some(top) = maybe_size.map(|s| (s.0.y / 2) as i32) else {
         return;
     };
-    let string = format!("Level {}", level.0 + 1);
-    for (i, c) in string.chars().enumerate() {
-        draw_w.write(DrawCharacter {
-            pos: IVec2::new(-((string.len() / 2) as i32) + i as i32, top + 1),
-            character: c,
-            color: ratatui::style::Color::White,
-        });
+    for c in DrawCharacter::as_centered_text(
+        IVec2::new(0, top + 1),
+        format!("Level {}", level.index + 1),
+    ) {
+        draw_w.write(c);
     }
 }
 
@@ -62,7 +61,7 @@ fn draw_island(
     for cell in island_cells.iter() {
         draw_w.write(DrawCharacter {
             pos: cell.pos,
-            character: '#',
+            character: ':',
             color: ratatui::style::Color::Yellow,
         });
     }
@@ -92,8 +91,18 @@ fn draw_raft(mut draw_w: EventWriter<DrawCharacter>, raft: Query<&Cell, With<Raf
     for cell in raft.iter() {
         draw_w.write(DrawCharacter {
             pos: cell.pos,
-            character: 'w',
+            character: '#',
             color: ratatui::style::Color::Rgb(90, 55, 40),
+        });
+    }
+}
+
+fn draw_crabs(mut draw_w: EventWriter<DrawCharacter>, crabs: Query<&Cell, With<Crab>>) {
+    for cell in crabs.iter() {
+        draw_w.write(DrawCharacter {
+            pos: cell.pos,
+            character: 'H',
+            color: ratatui::style::Color::Red,
         });
     }
 }

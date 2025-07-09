@@ -2,11 +2,11 @@ use bevy::prelude::*;
 
 use crate::{
     direction::Direction,
-    level_manager::LevelManager,
     raft_out::{
+        GameState,
         cell::Cell,
         island::IslandCell,
-        level::{CurrentLevel, ExitLevel},
+        level::{CurrentLevel, ExitPos},
         player::{CarryingWood, Player, PlayerInteractNoGround, spawn_player},
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
@@ -55,14 +55,13 @@ fn draw_preview(
 
     draw_w.write(DrawCharacter {
         pos: target,
-        character: 'w',
+        character: '#',
         color: ratatui::style::Color::Rgb(180, 100, 30),
     });
 }
 
 fn handle_placing(
     mut commands: Commands,
-    mut level_manager: LevelManager,
     current_level: Res<CurrentLevel>,
     mut rafts: Query<(Entity, &Cell, &mut RaftConstruction)>,
     cells: Query<&Cell>,
@@ -85,15 +84,16 @@ fn handle_placing(
             if cells.iter().any(|c| c.pos == interaction.pos) {
                 return;
             }
-            level_manager.spawn_in_current_level((
+            commands.spawn((
                 Cell::new(interaction.pos),
                 Raft {
                     facing: interaction.dir.flipped(),
                 },
                 RaftConstruction {
-                    required: current_level.0 + 2,
+                    required: current_level.index + 2,
                     progress: 1,
                 },
+                StateScoped(GameState::Level),
             ));
         }
         commands.entity(player).remove::<CarryingWood>();
@@ -128,13 +128,13 @@ fn draw_progress(
 }
 
 fn move_raft(
-    mut commands: Commands,
     time: Res<Time>,
-    level_manager: LevelManager,
+    mut commands: Commands,
+    mut next_state: ResMut<NextState<GameState>>,
+    mut level: ResMut<CurrentLevel>,
     maybe_size: Option<Res<TextRendererSize>>,
     island_cells: Query<&Cell, With<IslandCell>>,
     mut raft_q: Query<(Entity, &mut Cell, &Raft, &mut MovingRaft), Without<IslandCell>>,
-    mut exit_w: EventWriter<ExitLevel>,
 ) {
     let Some(size) = maybe_size.map(|s| s.0.as_ivec2()) else {
         return;
@@ -147,15 +147,17 @@ fn move_raft(
     };
     let destination = raft_cell.pos + raft.facing.as_ivec2();
     if island_cells.iter().any(|c| c.pos == destination) {
-        spawn_player(level_manager, destination);
+        spawn_player(&mut commands, destination);
         commands.entity(e).despawn();
         return;
     }
     raft_cell.pos += raft.facing.as_ivec2();
     moving_raft.last_move = time.elapsed_secs();
     if raft_cell.pos.x.abs() >= size.x / 2 || raft_cell.pos.y.abs() >= size.y / 2 {
-        exit_w.write(ExitLevel {
-            exit_pos: raft_cell.pos,
-        });
+        commands.insert_resource(ExitPos(raft_cell.pos));
+        *level = CurrentLevel {
+            index: level.index + 1,
+        };
+        next_state.set(GameState::LevelIntro);
     }
 }

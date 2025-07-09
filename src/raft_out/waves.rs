@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use rand::{Rng, thread_rng};
 
 use crate::{
-    level_manager::LevelManager,
-    raft_out::{cell::Cell, island::IslandCell},
+    raft_out::{GameState, cell::Cell, island::IslandCell},
     text_renderer::draw::TextRendererSize,
 };
 
@@ -11,7 +10,10 @@ pub struct RaftOutWavesPlugin;
 
 impl bevy::prelude::Plugin for RaftOutWavesPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, (spawn_waves, move_waves));
+        app.add_systems(
+            Update,
+            (spawn_waves.run_if(in_state(GameState::Level)), move_waves),
+        );
     }
 }
 
@@ -21,7 +23,7 @@ pub struct Wave {
 }
 
 fn spawn_waves(
-    mut level_manager: LevelManager,
+    mut commands: Commands,
     maybe_size: Option<Res<TextRendererSize>>,
     waves_q: Query<&Cell, With<Wave>>,
 ) {
@@ -37,7 +39,11 @@ fn spawn_waves(
         thread_rng().gen_range(-half_size.x..half_size.x),
         thread_rng().gen_range(-half_size.y..half_size.y),
     );
-    level_manager.spawn_in_current_level((Cell::new(pos), Wave { last_move: 0. }));
+    commands.spawn((
+        Cell::new(pos),
+        Wave { last_move: 0. },
+        StateScoped(GameState::Level),
+    ));
 }
 
 fn move_waves(
