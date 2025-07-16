@@ -4,7 +4,7 @@ use crate::{
     raft_out::GameState,
     text_renderer::{
         draw::{BackgroundCharacter, DrawCharacter},
-        input::TextRendererJustPressed,
+        input::TextRendererInputs,
     },
 };
 
@@ -23,6 +23,7 @@ impl Plugin for RaftOutMenuPlugin {
 #[derive(PartialEq, Eq)]
 enum MenuOption {
     Start,
+    HighScores,
     Exit,
 }
 
@@ -30,6 +31,7 @@ impl MenuOption {
     fn text(&self) -> String {
         match self {
             MenuOption::Start => "Start Game",
+            MenuOption::HighScores => "Highscores",
             MenuOption::Exit => "Exit",
         }
         .to_string()
@@ -49,7 +51,7 @@ fn enter(mut commands: Commands) {
     });
     commands.spawn((
         Menu {
-            options: vec![MenuOption::Start, MenuOption::Exit],
+            options: vec![MenuOption::Start, MenuOption::HighScores, MenuOption::Exit],
             index: 0,
         },
         StateScoped(GameState::Menu),
@@ -74,27 +76,29 @@ fn draw(mut draw_w: EventWriter<DrawCharacter>, menu_q: Query<&Menu>) {
 fn handle_inputs(
     mut exit: EventWriter<AppExit>,
     mut next_state: ResMut<NextState<GameState>>,
-    mut just_pressed_r: EventReader<TextRendererJustPressed>,
+    pressed: Res<TextRendererInputs>,
     mut menu_q: Query<&mut Menu>,
 ) {
     let Ok(mut menu) = menu_q.single_mut() else {
         return;
     };
-    for pressed in just_pressed_r.read() {
-        match pressed.key {
-            KeyCode::KeyW => menu.index = (menu.index + 1) % menu.options.len(),
-            KeyCode::KeyS => {
-                menu.index = (menu.index + menu.options.len() - 1) % menu.options.len()
+    if pressed.just_pressed(KeyCode::KeyW) {
+        menu.index = (menu.index + menu.options.len() - 1) % menu.options.len()
+    }
+    if pressed.just_pressed(KeyCode::KeyS) {
+        menu.index = (menu.index + 1) % menu.options.len()
+    }
+    if pressed.just_pressed(KeyCode::Enter) {
+        match menu.options[menu.index] {
+            MenuOption::Start => {
+                next_state.set(GameState::LevelIntro);
             }
-            KeyCode::Enter => match menu.options[menu.index] {
-                MenuOption::Start => {
-                    next_state.set(GameState::LevelIntro);
-                }
-                MenuOption::Exit => {
-                    exit.write(AppExit::Success);
-                }
-            },
-            _ => {}
+            MenuOption::HighScores => {
+                next_state.set(GameState::HighScores);
+            }
+            MenuOption::Exit => {
+                exit.write(AppExit::Success);
+            }
         }
     }
 }

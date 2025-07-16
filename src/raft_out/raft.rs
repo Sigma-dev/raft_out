@@ -6,7 +6,7 @@ use crate::{
         GameState,
         cell::Cell,
         island::IslandCell,
-        level::{CurrentLevel, ExitPos},
+        level::{ExitPos, GameData},
         player::{CarryingWood, Player, PlayerInteractNoGround, spawn_player},
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
@@ -62,7 +62,7 @@ fn draw_preview(
 
 fn handle_placing(
     mut commands: Commands,
-    current_level: Res<CurrentLevel>,
+    game_data: Res<GameData>,
     mut rafts: Query<(Entity, &Cell, &mut RaftConstruction)>,
     cells: Query<&Cell>,
     mut interactions_r: EventReader<PlayerInteractNoGround>,
@@ -90,7 +90,7 @@ fn handle_placing(
                     facing: interaction.dir.flipped(),
                 },
                 RaftConstruction {
-                    required: current_level.index + 2,
+                    required: game_data.current_level + 2,
                     progress: 1,
                 },
                 StateScoped(GameState::Level),
@@ -131,7 +131,7 @@ fn move_raft(
     time: Res<Time>,
     mut commands: Commands,
     mut next_state: ResMut<NextState<GameState>>,
-    mut level: ResMut<CurrentLevel>,
+    mut game_data: ResMut<GameData>,
     maybe_size: Option<Res<TextRendererSize>>,
     island_cells: Query<&Cell, With<IslandCell>>,
     mut raft_q: Query<(Entity, &mut Cell, &Raft, &mut MovingRaft), Without<IslandCell>>,
@@ -155,9 +155,7 @@ fn move_raft(
     moving_raft.last_move = time.elapsed_secs();
     if raft_cell.pos.x.abs() >= size.x / 2 || raft_cell.pos.y.abs() >= size.y / 2 {
         commands.insert_resource(ExitPos(raft_cell.pos));
-        *level = CurrentLevel {
-            index: level.index + 1,
-        };
+        game_data.current_level += 1;
         next_state.set(GameState::LevelIntro);
     }
 }

@@ -4,10 +4,10 @@ use rand::{seq::SliceRandom, thread_rng};
 use crate::{
     direction::Direction,
     raft_out::{
-        GameState, PlayerLives,
+        GameState, HighScore, PlayerLives, StoredData,
         cell::{Cell, SolidCell},
         island::IslandCell,
-        level::{CurrentLevel, LevelStart},
+        level::{GameData, LevelData},
         player::Player,
     },
 };
@@ -16,7 +16,10 @@ pub struct RaftOutCrabsPlugin;
 
 impl bevy::prelude::Plugin for RaftOutCrabsPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.add_systems(Update, (spawn_crabs, move_crabs, handle_hurt));
+        app.add_systems(
+            Update,
+            (spawn_crabs, move_crabs, handle_hurt).run_if(in_state(GameState::Level)),
+        );
     }
 }
 
@@ -28,20 +31,17 @@ pub struct Crab {
 fn spawn_crabs(
     time: Res<Time>,
     mut commands: Commands,
-    current_level: Res<CurrentLevel>,
+    game_data: Res<GameData>,
     player_q: Query<&Cell, (With<Player>, Without<Crab>)>,
     crabs: Query<&Cell, (With<Crab>, Without<IslandCell>)>,
     islands: Query<&Cell, With<IslandCell>>,
-    level_start_q: Query<&LevelStart>,
+    level_start: Res<LevelData>,
 ) {
     let Ok(player) = player_q.single() else {
         return;
     };
-    let Ok(level_start) = level_start_q.single() else {
-        return;
-    };
     let crabs_amount = crabs.iter().len() as u32;
-    let max_crabs = current_level.index + 10;
+    let max_crabs = game_data.current_level;
     let spawn_interval = 2.;
     if crabs_amount >= max_crabs
         || time.elapsed_secs() < level_start.start_time + (crabs_amount + 1) as f32 * spawn_interval
@@ -106,6 +106,8 @@ fn handle_hurt(
     mut lives: ResMut<PlayerLives>,
     crabs: Query<&Cell, With<Crab>>,
     player_q: Query<&Cell, With<Player>>,
+    game_data: Res<GameData>,
+    mut high_score: ResMut<StoredData>,
 ) {
     let Ok(player) = player_q.single() else {
         return;
@@ -113,6 +115,10 @@ fn handle_hurt(
     for crab in crabs {
         if crab.pos == player.pos {
             if lives.0 == 0 {
+                high_score.high_scores.push(HighScore {
+                    score: game_data.score,
+                    level: game_data.current_level,
+                });
                 next_state.set(GameState::Menu);
             } else {
                 lives.0 -= 1;

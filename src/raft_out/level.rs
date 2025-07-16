@@ -15,18 +15,22 @@ pub struct RaftOutLevelPlugin;
 
 impl bevy::prelude::Plugin for RaftOutLevelPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
-        app.insert_resource(CurrentLevel { index: 0 })
-            .add_systems(OnEnter(GameState::Level), (handle_background, start_level));
+        app.insert_resource(GameData {
+            current_level: 0,
+            score: 0,
+        })
+        .add_systems(OnEnter(GameState::Level), (handle_background, start_level));
     }
 }
 
 #[derive(Resource)]
-pub struct CurrentLevel {
-    pub index: u32,
+pub struct GameData {
+    pub current_level: u32,
+    pub score: u32,
 }
 
-#[derive(Component)]
-pub struct LevelStart {
+#[derive(Resource)]
+pub struct LevelData {
     pub start_time: f32,
 }
 
@@ -39,12 +43,9 @@ pub fn start_level(
     maybe_size: Option<Res<TextRendererSize>>,
     maybe_exit: Option<Res<ExitPos>>,
 ) {
-    commands.spawn((
-        LevelStart {
-            start_time: time.elapsed_secs(),
-        },
-        StateScoped(GameState::Level),
-    ));
+    commands.insert_resource(LevelData {
+        start_time: time.elapsed_secs(),
+    });
     if let Some(exit_pos) = maybe_exit.map(|e| e.0) {
         let size = maybe_size.unwrap();
         let half_size = size.0.as_ivec2() / 2;

@@ -6,7 +6,7 @@ use crate::{
         GameState,
         cell::{Cell, SolidCell, WalkableCell},
     },
-    text_renderer::input::TextRendererPressed,
+    text_renderer::input::TextRendererInputs,
 };
 
 pub struct RaftOutPlayerPlugin;
@@ -53,7 +53,7 @@ pub fn spawn_player(commands: &mut Commands, pos: IVec2) {
 fn move_player(
     time: Res<Time>,
     mut commands: Commands,
-    mut pressed_r: EventReader<TextRendererPressed>,
+    pressed: Res<TextRendererInputs>,
     mut player_q: Query<(&mut Cell, &mut Player)>,
     cells: Query<(Entity, &Cell, Option<&WalkableCell>, Option<&SolidCell>), Without<Player>>,
     mut interaction_w: EventWriter<PlayerInteractNoGround>,
@@ -65,22 +65,17 @@ fn move_player(
         return;
     }
     let mut maybe_requested_move = None;
-    for pressed in pressed_r.read() {
-        match pressed.key {
-            KeyCode::KeyW => {
-                maybe_requested_move = Some(Direction::Up);
-            }
-            KeyCode::KeyD => {
-                maybe_requested_move = Some(Direction::Right);
-            }
-            KeyCode::KeyS => {
-                maybe_requested_move = Some(Direction::Down);
-            }
-            KeyCode::KeyA => {
-                maybe_requested_move = Some(Direction::Left);
-            }
-            _ => {}
-        }
+    if pressed.pressed(KeyCode::KeyW) {
+        maybe_requested_move = Some(Direction::Up);
+    }
+    if pressed.pressed(KeyCode::KeyD) {
+        maybe_requested_move = Some(Direction::Right);
+    }
+    if pressed.pressed(KeyCode::KeyS) {
+        maybe_requested_move = Some(Direction::Down);
+    }
+    if pressed.pressed(KeyCode::KeyA) {
+        maybe_requested_move = Some(Direction::Left);
     }
     if let Some(requested_move) = maybe_requested_move {
         let destination = player_cell.pos + requested_move.as_ivec2();

@@ -18,7 +18,7 @@ impl Plugin for TextRendererDrawPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Flags>()
             .add_event::<DrawCharacter>()
-            .add_systems(Update, draw);
+            .add_systems(PostUpdate, draw);
     }
 }
 
@@ -91,7 +91,7 @@ fn draw(
 }
 
 pub fn debug_frame(frame: &mut Frame, flags: &Flags, diagnostics: &DiagnosticsStore) -> Rect {
-    let mut block = Block::bordered().bg(ratatui::style::Color::Black);
+    let mut block = Block::new().bg(ratatui::style::Color::Black);
     if flags.debug {
         if let Some(value) = diagnostics
             .get(&FrameTimeDiagnosticsPlugin::FPS)

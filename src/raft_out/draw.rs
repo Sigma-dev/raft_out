@@ -2,8 +2,15 @@ use bevy::prelude::*;
 
 use crate::{
     raft_out::{
-        cell::Cell, crabs::Crab, island::IslandCell, level::CurrentLevel, player::Player,
-        raft::Raft, trees::Tree, waves::Wave,
+        GameState,
+        cell::Cell,
+        crabs::Crab,
+        island::IslandCell,
+        level::{GameData, LevelData},
+        player::Player,
+        raft::Raft,
+        trees::Tree,
+        waves::Wave,
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
 };
@@ -21,7 +28,7 @@ impl bevy::prelude::Plugin for RaftOutDrawPlugin {
                 draw_crabs,
                 draw_player,
                 draw_raft,
-                draw_level,
+                draw_level.run_if(in_state(GameState::Level)),
             )
                 .chain(),
         );
@@ -30,15 +37,29 @@ impl bevy::prelude::Plugin for RaftOutDrawPlugin {
 
 fn draw_level(
     mut draw_w: EventWriter<DrawCharacter>,
-    level: Res<CurrentLevel>,
+    game_data: Res<GameData>,
     maybe_size: Option<Res<TextRendererSize>>,
 ) {
-    let Some(top) = maybe_size.map(|s| (s.0.y / 2) as i32) else {
+    let Some(size) = maybe_size.map(|s| s.0.as_ivec2() / 2) else {
         return;
     };
+    for i in -size.x..size.x {
+        draw_w.write(DrawCharacter {
+            pos: IVec2::new(i, size.y),
+            character: ' ',
+            color: ratatui::style::Color::White,
+        });
+    }
     for c in DrawCharacter::as_centered_text(
-        IVec2::new(0, top + 1),
-        format!("Level {}", level.index + 1),
+        IVec2::new(-10, size.y),
+        format!("Level {}", game_data.current_level + 1),
+    ) {
+        draw_w.write(c);
+    }
+
+    for c in DrawCharacter::as_centered_text(
+        IVec2::new(10, size.y),
+        format!("Score {}", game_data.score),
     ) {
         draw_w.write(c);
     }
