@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    raft_out::{GameState, PlayerLives},
+    raft_out::{GameState, PlayerLives, level::GameData},
     text_renderer::draw::{BackgroundCharacter, DrawCharacter},
 };
 
@@ -42,11 +42,18 @@ fn draw_intro(
     mut draw_w: EventWriter<DrawCharacter>,
     intro_q: Query<&LevelIntro>,
     lives: Res<PlayerLives>,
+    game_data: Res<GameData>,
 ) {
     if intro_q.is_empty() {
         return;
     }
-    for c in DrawCharacter::as_centered_text(IVec2::new(0, 0), format!("Lives: {}", lives.0)) {
+    for c in DrawCharacter::as_centered_text(
+        IVec2::new(0, 1),
+        format!("Level {}", game_data.current_level + 1),
+    ) {
+        draw_w.write(c);
+    }
+    for c in DrawCharacter::as_centered_text(IVec2::new(0, -1), format!("Lives: {}", lives.0)) {
         draw_w.write(c);
     }
 }

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use crate::{
     raft_out::GameState,
     text_renderer::{
-        draw::{BackgroundCharacter, DrawCharacter},
+        draw::{BackgroundCharacter, DrawCharacter, TextRendererSize},
         input::TextRendererInputs,
     },
 };
@@ -46,8 +46,8 @@ pub struct Menu {
 
 fn enter(mut commands: Commands) {
     commands.insert_resource(BackgroundCharacter {
-        character: ' ',
-        color: ratatui::style::Color::White,
+        character: '~',
+        color: ratatui::style::Color::Blue,
     });
     commands.spawn((
         Menu {
@@ -58,7 +58,14 @@ fn enter(mut commands: Commands) {
     ));
 }
 
-fn draw(mut draw_w: EventWriter<DrawCharacter>, menu_q: Query<&Menu>) {
+fn draw(
+    mut draw_w: EventWriter<DrawCharacter>,
+    menu_q: Query<&Menu>,
+    maybe_size: Option<Res<TextRendererSize>>,
+) {
+    let Some(size) = maybe_size else {
+        return;
+    };
     let Ok(menu) = menu_q.single() else {
         return;
     };
@@ -69,6 +76,47 @@ fn draw(mut draw_w: EventWriter<DrawCharacter>, menu_q: Query<&Menu>) {
             format!("{} {}", if selected { "*" } else { "" }, option.text()),
         ) {
             draw_w.write(c);
+        }
+    }
+    let title = vec![
+        vec![
+            '#', '#', ' ', ' ', ' ', ' ', '#', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', '#', '#',
+            '#', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', '#', ' ', '#', ' ', ' ', '#', '#', '#',
+        ],
+        vec![
+            '#', ' ', '#', ' ', ' ', '#', ' ', '#', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#',
+            ' ', ' ', ' ', ' ', '#', ' ', '#', ' ', ' ', '#', ' ', '#', ' ', ' ', ' ', '#', ' ',
+        ],
+        vec![
+            '#', '#', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', '#', '#', ' ', ' ', ' ', ' ', '#',
+            ' ', ' ', ' ', ' ', '#', ' ', '#', ' ', ' ', '#', ' ', '#', ' ', ' ', ' ', '#', ' ',
+        ],
+        vec![
+            '#', ' ', '#', ' ', ' ', '#', ' ', '#', ' ', ' ', '#', ' ', ' ', ' ', ' ', ' ', '#',
+            ' ', ' ', ' ', ' ', '#', '#', '#', ' ', ' ', '#', '#', '#', ' ', ' ', ' ', '#', ' ',
+        ],
+    ];
+    let scale = (size.0.y / 15) as i32;
+    for (i, line) in title.iter().enumerate() {
+        for (j, c) in line.iter().enumerate() {
+            for y in 0..scale {
+                for x in 0..scale {
+                    let config = if *c == ' ' {
+                        ('~', ratatui::style::Color::Blue)
+                    } else {
+                        (*c, ratatui::style::Color::Rgb(90, 55, 40))
+                    };
+
+                    draw_w.write(DrawCharacter {
+                        pos: IVec2::new(
+                            -(line.len() as i32 * scale / 2) + j as i32 * scale + x as i32,
+                            5 * scale - (i as i32 * scale + y as i32),
+                        ),
+                        character: config.0,
+                        color: config.1,
+                    });
+                }
+            }
         }
     }
 }

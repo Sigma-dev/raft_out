@@ -2,15 +2,8 @@ use bevy::prelude::*;
 
 use crate::{
     raft_out::{
-        GameState,
-        cell::Cell,
-        crabs::Crab,
-        island::IslandCell,
-        level::{GameData, LevelData},
-        player::Player,
-        raft::Raft,
-        trees::Tree,
-        waves::Wave,
+        GameState, cell::Cell, crabs::Crab, island::IslandCell, level::GameData, player::Player,
+        raft::Raft, trees::Tree, waves::Wave,
     },
     text_renderer::draw::{DrawCharacter, TextRendererSize},
 };

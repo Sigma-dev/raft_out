@@ -29,9 +29,7 @@ pub struct Player {
 pub struct CarryingWood;
 
 #[derive(Event)]
-pub struct PlayerInteract {
-    dir: Direction,
-}
+pub struct PlayerInteract;
 
 #[derive(Event)]
 pub struct PlayerInteractNoGround {
@@ -96,9 +94,7 @@ fn move_player(
             .iter()
             .find(|(_, c, _, s)| c.pos == destination && s.is_some())
         {
-            commands.entity(e).trigger(PlayerInteract {
-                dir: requested_move.flipped(),
-            });
+            commands.entity(e).trigger(PlayerInteract);
             return;
         }
         player_cell.pos = destination;

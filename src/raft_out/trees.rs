@@ -5,7 +5,7 @@ use crate::raft_out::{
     GameState,
     cell::{Cell, SolidCell},
     island::{IslandCell, IslandCreated},
-    level::{GameData, LevelData},
+    level::GameData,
     player::{CarryingWood, Player, PlayerInteract},
 };
 
