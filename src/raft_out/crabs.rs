@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use rand::{seq::SliceRandom, thread_rng};
 
 use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
     direction::Direction,
     raft_out::{
         GameState, HighScore, PlayerLives, StoredData,
@@ -108,12 +109,14 @@ fn handle_hurt(
     player_q: Query<&Cell, With<Player>>,
     game_data: Res<GameData>,
     mut high_score: ResMut<StoredData>,
+    mut audio_manager: AudioManager,
 ) {
     let Ok(player) = player_q.single() else {
         return;
     };
     for crab in crabs {
         if crab.pos == player.pos {
+            audio_manager.play_sound(PlayAudio2D::new_once("sounds/hurt.wav".to_owned()));
             if lives.0 == 0 {
                 high_score.high_scores.push(HighScore {
                     score: game_data.score,

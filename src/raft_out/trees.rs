@@ -1,12 +1,15 @@
 use bevy::prelude::*;
 use rand::{seq::IteratorRandom, thread_rng};
 
-use crate::raft_out::{
-    GameState,
-    cell::{Cell, SolidCell},
-    island::{IslandCell, IslandCreated},
-    level::GameData,
-    player::{CarryingWood, Player, PlayerInteract},
+use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
+    raft_out::{
+        GameState,
+        cell::{Cell, SolidCell},
+        island::{IslandCell, IslandCreated},
+        level::GameData,
+        player::{CarryingWood, Player, PlayerInteract},
+    },
 };
 
 pub struct RaftOutTreesPlugin;
@@ -46,13 +49,16 @@ fn spawn_trees(
                     |trigger: Trigger<PlayerInteract>,
                      mut commands: Commands,
                      player_q: Query<Entity, (With<Player>, Without<CarryingWood>)>,
-                     mut game_data: ResMut<GameData>| {
+                     mut game_data: ResMut<GameData>,
+                     mut audio_manager: AudioManager| {
                         let Ok(player) = player_q.single() else {
                             return;
                         };
                         commands.entity(trigger.target()).despawn();
                         commands.entity(player).insert(CarryingWood);
                         game_data.score += 50;
+                        audio_manager
+                            .play_sound(PlayAudio2D::new_once("sounds/chop.wav".to_owned()));
                     },
                 );
         }

@@ -5,8 +5,11 @@
 
 use bevy::prelude::*;
 
-use crate::{raft_out::RaftOutPlugin, text_renderer::TextRendererPlugin};
+use crate::{
+    audio_manager::AudioManagerPlugin, raft_out::RaftOutPlugin, text_renderer::TextRendererPlugin,
+};
 
+mod audio_manager;
 mod direction;
 mod raft_out;
 mod text_renderer;
@@ -15,5 +18,6 @@ fn main() -> AppExit {
     App::new()
         .add_plugins(TextRendererPlugin)
         .add_plugins(RaftOutPlugin)
+        .add_plugins(AudioManagerPlugin { volume_mult: 0.1 })
         .run()
 }

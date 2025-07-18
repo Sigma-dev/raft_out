@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
     direction::Direction,
     raft_out::{
         GameState,
@@ -51,6 +52,7 @@ pub fn spawn_player(commands: &mut Commands, pos: IVec2) {
 fn move_player(
     time: Res<Time>,
     mut commands: Commands,
+    mut audio_manager: AudioManager,
     pressed: Res<TextRendererInputs>,
     mut player_q: Query<(&mut Cell, &mut Player)>,
     cells: Query<(Entity, &Cell, Option<&WalkableCell>, Option<&SolidCell>), Without<Player>>,
@@ -98,5 +100,6 @@ fn move_player(
             return;
         }
         player_cell.pos = destination;
+        audio_manager.play_sound(PlayAudio2D::new_once("sounds/sand.wav".to_owned()));
     }
 }

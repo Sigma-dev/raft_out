@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
     raft_out::GameState,
     text_renderer::{
         draw::{BackgroundCharacter, DrawCharacter, TextRendererSize},
@@ -122,6 +123,7 @@ fn draw(
 }
 
 fn handle_inputs(
+    mut audio_manager: AudioManager,
     mut exit: EventWriter<AppExit>,
     mut next_state: ResMut<NextState<GameState>>,
     pressed: Res<TextRendererInputs>,
@@ -130,13 +132,22 @@ fn handle_inputs(
     let Ok(mut menu) = menu_q.single_mut() else {
         return;
     };
-    if pressed.just_pressed(KeyCode::KeyW) {
-        menu.index = (menu.index + menu.options.len() - 1) % menu.options.len()
+    let maybe_move: Option<i32> = if pressed.just_pressed(KeyCode::KeyW) {
+        Some(-1)
+    } else if pressed.just_pressed(KeyCode::KeyS) {
+        Some(1)
+    } else {
+        None
+    };
+
+    if let Some(move_input) = maybe_move {
+        audio_manager.play_sound(PlayAudio2D::new_once("sounds/select.wav".to_owned()));
+        menu.index = (((menu.index + menu.options.len()) as i32 + move_input)
+            % menu.options.len() as i32) as usize
     }
-    if pressed.just_pressed(KeyCode::KeyS) {
-        menu.index = (menu.index + 1) % menu.options.len()
-    }
+
     if pressed.just_pressed(KeyCode::Enter) {
+        audio_manager.play_sound(PlayAudio2D::new_once("sounds/enter.wav".to_owned()));
         match menu.options[menu.index] {
             MenuOption::Start => {
                 next_state.set(GameState::LevelIntro);

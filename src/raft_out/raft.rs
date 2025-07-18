@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
     direction::Direction,
     raft_out::{
         GameState,
@@ -62,20 +63,24 @@ fn draw_preview(
 
 fn handle_placing(
     mut commands: Commands,
-    game_data: Res<GameData>,
+    mut game_data: ResMut<GameData>,
     mut rafts: Query<(Entity, &Cell, &mut RaftConstruction)>,
     cells: Query<&Cell>,
     mut interactions_r: EventReader<PlayerInteractNoGround>,
     player_q: Query<Entity, (With<CarryingWood>, With<Cell>, With<Player>)>,
+    mut audio_manager: AudioManager,
 ) {
     for interaction in interactions_r.read() {
         let Ok(player) = player_q.single() else {
             return;
         };
+        game_data.score += 75;
+        audio_manager.play_sound(PlayAudio2D::new_once("sounds/place.wav".to_owned()));
         if let Some((e, _, mut raft)) = rafts.iter_mut().find(|(_, c, _)| c.pos == interaction.pos)
         {
             raft.progress += 1;
             if raft.progress >= raft.required {
+                game_data.score += 200;
                 commands.entity(player).despawn();
                 commands.entity(e).insert(MovingRaft { last_move: 0. });
                 return;

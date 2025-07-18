@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
+    audio_manager::{AudioManager, PlayAudio2D},
     raft_out::{GameState, StoredData},
     text_renderer::{
         draw::{BackgroundCharacter, DrawCharacter},
@@ -23,8 +24,8 @@ impl Plugin for RaftOutHighScoresPlugin {
 
 fn enter(mut commands: Commands) {
     commands.insert_resource(BackgroundCharacter {
-        character: ' ',
-        color: ratatui::style::Color::White,
+        character: '~',
+        color: ratatui::style::Color::Blue,
     });
 }
 
@@ -52,8 +53,13 @@ fn draw(mut draw_w: EventWriter<DrawCharacter>, stored_data: Res<StoredData>) {
     }
 }
 
-fn handle_inputs(mut next_state: ResMut<NextState<GameState>>, pressed: Res<TextRendererInputs>) {
+fn handle_inputs(
+    mut audio_manager: AudioManager,
+    mut next_state: ResMut<NextState<GameState>>,
+    pressed: Res<TextRendererInputs>,
+) {
     if pressed.just_pressed(KeyCode::Enter) {
+        audio_manager.play_sound(PlayAudio2D::new_once("sounds/enter.wav".to_owned()));
         next_state.set(GameState::Menu);
     }
 }
