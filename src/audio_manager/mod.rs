@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use bevy::audio::{PlaybackMode, Volume};
 use bevy::platform::collections::HashMap;
 use bevy::{ecs::system::*, prelude::*};
